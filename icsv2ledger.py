@@ -103,6 +103,7 @@ DEFAULTS = dotdict({
     'quiet': False,
     'reverse': False,
     'skip_lines': str(1),
+    'skip_footer': str(0),
     'skip_dupes': False,
     'confirm_dupes': False,
     'incremental': False,
@@ -296,6 +297,12 @@ def parse_args_and_config_file():
         type=int,
         help=('number of lines to skip from CSV file'
               ' (default: {0})'.format(DEFAULTS.skip_lines)))
+    parser.add_argument(
+        '--skip-footer',
+        metavar='INT',
+        type=int,
+        help=('number of lines at bottom of CSV file to skip'
+              ' (default: {0})'.format(DEFAULTS.skip_footer)))
     parser.add_argument(
         '--skip-dupes',
         action='store_true',
@@ -957,11 +964,16 @@ def main(options):
 
     def get_csv_lines(in_file):
         """
-        Return csv lines from the in_file adjusted
-        for the skip_lines and reverse options.
+        Return csv lines from the in_file adjusted for the
+        skip_lines, skip_footer and reverse options.
         """
-        csv_lines = in_file.readlines()
+        # Add support for multiline strings in csv. Regex explanation:
+        # https://stackoverflow.com/questions/11502598/
+        csv_regex = re.compile('\n(?=(?:[^"]*"[^"]*")*[^"]*$)')
+        csv_lines = csv_regex.split(in_file.read())
+        csv_lines = [csv_line.replace('\n', '') for csv_line in csv_lines]
         csv_lines = csv_lines[options.skip_lines:]
+        csv_lines = csv_lines[:len(csv_lines) - options.skip_footer]
         if options.reverse:
             csv_lines = list(reversed(csv_lines))
         return csv_lines

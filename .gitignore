@@ -1,5 +1,6 @@
-.idea
-.icsv2ledgerrc*
-tests/__pycache__
+__pycache__/
+icsv2ledger*/
 tests/.pytest_cache
 venv/
+.idea
+.icsv2ledgerrc*
